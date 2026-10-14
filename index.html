@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XREX CMS — Hecto Financial Virtual Accounts (Prototype)</title>
+<style>
+:root{
+  --blue:#194AF9;
+  --blue-soft:#EEF2FF;
+  --blue-line:#C7D4FF;
+  --ink:#202222;
+  --ink-2:#5A6169;
+  --ink-3:#8B939C;
+  --line:#E6E8EC;
+  --line-2:#F0F1F4;
+  --bg:#F5F6F8;
+  --white:#fff;
+  --green:#0F9D58;
+  --green-bg:#E9F7EF;
+  --amber:#B26A00;
+  --amber-bg:#FFF4E5;
+  --red:#C62828;
+  --red-bg:#FDECEC;
+  --grey-bg:#F1F2F4;
+  --radius:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--ink); font-size:13px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;font-size:inherit}
+a{color:var(--blue);text-decoration:none}
+
+/* ---------- Layout ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:236px;flex:0 0 236px;background:var(--white);
+  border-right:1px solid var(--line);display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:9px;padding:16px 18px 14px;border-bottom:1px solid var(--line-2)}
+.brand-mark{width:24px;height:24px;border-radius:6px;background:var(--blue);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;letter-spacing:-.5px}
+.brand-txt{font-weight:700;font-size:14px;letter-spacing:-.2px}
+.brand-sub{font-size:11px;color:var(--ink-3);margin-top:1px}
+.nav{padding:10px 8px 24px;flex:1}
+.nav-group{margin-top:6px}
+.nav-group-label{
+  font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;
+  letter-spacing:.5px;padding:10px 12px 6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:8px;padding:7px 12px;margin:1px 0;
+  border-radius:6px;color:var(--ink-2);cursor:pointer;position:relative;font-size:13px;
+}
+.nav-item:hover{background:var(--line-2)}
+.nav-item.child{padding-left:26px}
+.nav-item.active{background:var(--blue-soft);color:var(--blue);font-weight:600}
+.nav-item.active::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:var(--blue)}
+.nav-item .cnt{margin-left:auto;font-size:11px;color:var(--ink-3);font-weight:500}
+.nav-item.active .cnt{color:var(--blue)}
+.nav-item.disabled{opacity:.45;cursor:not-allowed}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:52px;background:var(--white);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:20;
+}
+.env-badge{
+  font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;
+  background:var(--amber-bg);color:var(--amber);border:1px solid #FFE0B2;
+}
+.proto-badge{
+  font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;
+  background:var(--grey-bg);color:var(--ink-2);border:1px solid var(--line);
+}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--ink-2);font-size:12px}
+.avatar{width:26px;height:26px;border-radius:99px;background:#DDE3FF;color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px}
+
+.content{padding:20px 24px 60px;max-width:1560px;width:100%}
+.crumb{font-size:12px;color:var(--ink-3);margin-bottom:6px}
+.crumb span{color:var(--ink-3)}
+.page-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-.3px;margin:0}
+.page-desc{font-size:12.5px;color:var(--ink-2);margin-top:4px;max-width:820px}
+.page-head-actions{margin-left:auto;display:flex;gap:8px;align-items:center;padding-top:2px}
+
+/* ---------- Cards / panels ---------- */
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px}
+.card-head{padding:12px 16px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:10px}
+.card-title{font-weight:600;font-size:13.5px}
+.card-head .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.card-body{padding:16px}
+.card-body.tight{padding:12px 16px}
+
+/* ---------- Buttons ---------- */
+.btn{
+  border:1px solid var(--line);background:var(--white);color:var(--ink);
+  padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:500;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn:hover{border-color:#c9ccd2;background:#fafbfc}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:#1240dd;border-color:#1240dd}
+.btn.danger{color:var(--red);border-color:#F3C9C9}
+.btn.danger:hover{background:var(--red-bg)}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-link{background:none;border:none;color:var(--blue);cursor:pointer;padding:0;font-size:12.5px;font-weight:500}
+.btn-link:hover{text-decoration:underline}
+.btn-link.muted{color:var(--ink-3)}
+.icon-btn{
+  background:none;border:none;cursor:pointer;color:var(--ink-2);
+  width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
+}
+.icon-btn:hover{background:var(--line-2);color:var(--ink)}
+.row-actions{display:flex;gap:10px;align-items:center}
+
+/* ---------- Filters ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 16px;border-bottom:1px solid var(--line-2)}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:11px;color:var(--ink-3);font-weight:600}
+input[type=text],input[type=date],input[type=number],select,textarea{
+  border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:12.5px;
+  background:#fff;color:var(--ink);font-family:inherit;outline:none;min-height:30px;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(25,74,249,.10)}
+input:disabled,select:disabled,textarea:disabled{background:#F7F8FA;color:var(--ink-2)}
+select{min-width:130px;cursor:pointer}
+.f input[type=text]{min-width:210px}
+
+/* ---------- Table ---------- */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+table.tbl th{
+  text-align:left;font-weight:600;color:var(--ink-2);background:#FAFBFC;
+  padding:9px 14px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:11.5px;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+table.tbl td{padding:10px 14px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+table.tbl tr:last-child td{border-bottom:none}
+table.tbl tbody tr:hover{background:#FBFCFE}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.muted{color:var(--ink-3)}
+.sub{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.nowrap{white-space:nowrap}
+.empty{padding:44px 16px;text-align:center;color:var(--ink-3)}
+table.tbl th.stick,table.tbl td.stick{position:sticky;right:0;background:#fff;box-shadow:-6px 0 8px -6px rgba(0,0,0,.10)}
+table.tbl th.stick{background:#FAFBFC}
+table.tbl tbody tr:hover td.stick{background:#FBFCFE}
+.tbl-foot{padding:10px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--line-2);color:var(--ink-3);font-size:12px}
+
+/* ---------- Tags ---------- */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid transparent;white-space:nowrap}
+.tag .dot{width:6px;height:6px;border-radius:99px;background:currentColor}
+.tag.success{background:var(--blue-soft);color:var(--blue);border-color:var(--blue-line)}
+.tag.pending{background:var(--amber-bg);color:var(--amber);border-color:#FFE0B2}
+.tag.active{background:var(--green-bg);color:var(--green);border-color:#C8E6D4}
+.tag.terminated{background:var(--grey-bg);color:var(--ink-2);border-color:var(--line)}
+.tag.failed{background:var(--red-bg);color:var(--red);border-color:#F3C9C9}
+.tag.info{background:var(--blue-soft);color:var(--blue);border-color:var(--blue-line)}
+.tag.plain{background:var(--grey-bg);color:var(--ink-2);border-color:var(--line);font-weight:500}
+
+/* ---------- Drawer ---------- */
+.scrim{position:fixed;inset:0;background:rgba(16,18,22,.32);opacity:0;pointer-events:none;transition:opacity .18s;z-index:60}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;right:0;height:100vh;width:560px;max-width:96vw;background:#fff;z-index:70;
+  transform:translateX(102%);transition:transform .22s cubic-bezier(.3,.8,.4,1);
+  display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.06);
+}
+.drawer.wide{width:760px}
+.drawer.open{transform:translateX(0)}
+.drawer-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.drawer-title{font-size:15px;font-weight:700}
+.drawer-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.drawer-body{padding:18px 20px;overflow-y:auto;flex:1}
+.drawer-foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;background:#FCFCFD}
+
+/* ---------- Forms ---------- */
+.form-sec{margin-bottom:22px}
+.form-sec-title{
+  font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.6px;
+  padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line-2);
+  display:flex;align-items:center;gap:8px;
+}
+.form-sec-title .api{font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3);font-size:11px}
+.field{margin-bottom:14px}
+.field > label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;margin-bottom:5px}
+.field .param{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--ink-3);font-weight:500;background:var(--grey-bg);padding:1px 5px;border-radius:4px}
+.req{color:var(--red);font-size:13px;line-height:1}
+.cond{color:var(--amber);font-size:13px;line-height:1}
+.opt{color:var(--ink-3);font-size:11px;font-weight:500}
+.field input,.field select,.field textarea{width:100%}
+.hint{font-size:11.5px;color:var(--ink-3);margin-top:4px;display:flex;justify-content:space-between;gap:10px}
+.hint .err{color:var(--red);font-weight:600}
+.hint .ok{color:var(--green);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+
+/* KV list for responses */
+.kv{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.kv-row{display:grid;grid-template-columns:190px 1fr;border-bottom:1px solid var(--line-2)}
+.kv-row:last-child{border-bottom:none}
+.kv-row > div{padding:8px 12px}
+.kv-row > div:first-child{background:#FAFBFC;color:var(--ink-2);font-size:12px;border-right:1px solid var(--line-2)}
+.kv-row .pn{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--ink-3);display:block}
+
+.callout{border:1px solid var(--blue-line);background:var(--blue-soft);border-radius:var(--radius);padding:11px 13px;font-size:12.5px;color:#22337A;margin-bottom:16px}
+.callout.warn{border-color:#FFE0B2;background:var(--amber-bg);color:#7A4B00}
+.callout.err{border-color:#F3C9C9;background:var(--red-bg);color:#8E2020}
+.callout.ok{border-color:#C8E6D4;background:var(--green-bg);color:#0B6B3D}
+.callout b{font-weight:700}
+.callout .k{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+
+/* diff */
+table.diff{width:100%;border-collapse:collapse;font-size:12.5px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+table.diff th{background:#FAFBFC;text-align:left;padding:7px 11px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+table.diff td{padding:7px 11px;border-bottom:1px solid var(--line-2)}
+table.diff tr:last-child td{border-bottom:none}
+td.to{background:var(--blue-soft);color:#22337A;font-weight:600}
+
+/* timeline */
+.tl{position:relative;padding-left:20px}
+.tl::before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:1px;background:var(--line)}
+.tl-item{position:relative;padding-bottom:18px}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{content:"";position:absolute;left:-18px;top:4px;width:9px;height:9px;border-radius:99px;background:#fff;border:2px solid var(--blue-line)}
+.tl-item.hi::before{border-color:var(--blue);background:var(--blue)}
+.tl-act{font-weight:600;font-size:12.5px}
+.tl-meta{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.tl-note{font-size:12px;color:var(--ink-2);margin-top:6px;background:#FAFBFC;border:1px solid var(--line-2);border-radius:6px;padding:7px 9px}
+
+/* upload */
+.drop{
+  border:1.5px dashed var(--blue-line);border-radius:var(--radius);background:#FBFCFF;
+  padding:26px;text-align:center;cursor:pointer;
+}
+.drop:hover{background:var(--blue-soft)}
+.drop .big{font-weight:600;font-size:13.5px;margin-bottom:4px}
+.progress{height:6px;border-radius:99px;background:var(--line-2);overflow:hidden}
+.progress > i{display:block;height:100%;background:var(--blue);width:0;transition:width .2s}
+
+/* ftp */
+.path-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px}
+.path-bar .seg{cursor:pointer;color:var(--blue)}
+.path-bar .seg.cur{color:var(--ink);cursor:default;font-weight:600}
+.conn{display:flex;gap:22px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.conn b{color:var(--ink);font-weight:600}
+.fname{display:flex;align-items:center;gap:8px}
+.fico{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex:0 0 22px}
+.fico.dir{background:#F0B429;}
+.fico.csv{background:#0F9D58}
+.fico.xls{background:#137333}
+.fico.txt{background:#8B939C}
+.fico.zip{background:#7B5EA7}
+
+/* toast */
+.toasts{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:#202222;color:#fff;padding:10px 14px;border-radius:8px;font-size:12.5px;
+  box-shadow:0 6px 20px rgba(0,0,0,.18);animation:slideup .2s;max-width:380px;
+}
+.toast.ok{background:#0F6B41}
+.toast.err{background:#9E2323}
+@keyframes slideup{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:99px;display:inline-block;animation:spin .7s linear infinite}
+.spinner.dark{border-color:rgba(0,0,0,.15);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.dev{
+  border:1px dashed #C9CDD4;border-radius:var(--radius);padding:10px 12px;background:#FCFCFD;
+  font-size:12px;color:var(--ink-2);margin-bottom:16px;
+}
+.dev .t{font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-3);margin-bottom:7px}
+.dev select{min-width:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3);padding:10px 16px;border-top:1px solid var(--line-2);background:#FCFCFD}
+.legend b{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">X</div>
+      <div>
+        <div class="brand-txt">XREX CMS</div>
+        <div class="brand-sub">Pay</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="env-badge" id="envBadge">Testbed · tbgw.settlebank.co.kr</span>
+      <span class="proto-badge">Prototype · demo data</span>
+      <div class="topbar-right">
+        <span>OP · Jerry Huang</span>
+        <div class="avatar">JH</div>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div style="flex:1">
+      <div class="drawer-title" id="drawerTitle">Title</div>
+      <div class="drawer-sub" id="drawerSub"></div>
+    </div>
+    <button class="icon-btn" onclick="closeDrawer()" aria-label="Close" title="Close">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot" id="drawerFoot"></div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================================================
+   XREX CMS — Hecto Financial Virtual Account Management
+   Static prototype. All data is demo data. No real API calls.
+   API reference: Hecto Financial Integrated API Spec v2.0.8
+                  "Virtual Account Issuance (A2)" — /pyag/v1/fxVaccount
+   ============================================================ */
+
+/* ---------- Reference data ---------- */
+const BANKS = [
+  {code:"002",name:"KDB"},{code:"003",name:"IBK"},{code:"004",name:"Kookmin Bank"},
+  {code:"007",name:"Suhyup Bank"},{code:"011",name:"Nonghyup Bank"},{code:"020",name:"Woori Bank"},
+  {code:"023",name:"SC Bank"},{code:"027",name:"Citi Bank"},{code:"031",name:"Daegu Bank"},
+  {code:"032",name:"Busan Bank"},{code:"071",name:"Korea Post"},{code:"081",name:"Hana Bank"},
+  {code:"088",name:"Shinhan Bank"},{code:"089",name:"Kbank"},{code:"090",name:"Kakao Bank"},
+  {code:"092",name:"Toss Bank"}
+];
+const bankName = c => (BANKS.find(b=>b.code===c)||{name:"Unknown"}).name;
+
+const RESULT_CODES = {
+  "0000":"Normal processing",
+  "PY11":"Bank maintenance time",
+  "PY41":"Exceeded service capacity",
+  "PY61":"Invalid virtual account numbers",
+  "PY97":"Merchant is not registered (Check message)",
+  "PY98":"Invalid request parameter (Check message)",
+  "PY99":"Internal system error",
+  "VTIM":"Provider timeout"
+};
+
+const MERCHANTS = ["mid_xrex_kr01","mid_xrex_kr02","mid_test"];
+
+const TRD_TYPE = {1:"Issuance", 2:"Termination", 3:"Change of account holder name"};
+
+/* ---------- State ---------- */
+let route = "va";
+let uid = 1000;
+const nextId = () => "R" + (++uid);
+
+function ts(offsetMin){
+  const d = new Date(Date.now() - (offsetMin||0)*60000);
+  const p = n => String(n).padStart(2,"0");
+  return {
+    dt: d.getFullYear()+p(d.getMonth()+1)+p(d.getDate()),
+    tm: p(d.getHours())+p(d.getMinutes())+p(d.getSeconds()),
+    iso: d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())
+  };
+}
+function fmtTrd(dt,tm){
+  if(!dt) return "—";
+  return dt.slice(0,4)+"-"+dt.slice(4,6)+"-"+dt.slice(6,8)+" "+tm.slice(0,2)+":"+tm.slice(2,4)+":"+tm.slice(4,6);
+}
+function fmtValidTo(v){
+  if(!v) return '<span class="muted">Indefinite</span>';
+  return '<span class="mono">'+v.slice(0,4)+"-"+v.slice(4,6)+"-"+v.slice(6,8)+" "+v.slice(8,10)+":"+v.slice(10,12)+'</span>';
+}
+
+/* ---------- Demo records ---------- */
+function mkAcct(o){
+  return Object.assign({
+    id:nextId(), mchtId:"mid_xrex_kr01", accountNm:"XREX", bankCd:"023",
+    vaccountNo:"", validTo:"", status:"success", crc:"KRW",
+    trdNo:"", trdDt:"", trdTm:"", outStatCd:"0021", outRsltCd:"0000", outRsltMsg:"정상처리",
+    depositedAmt:0, depositor:"", nmMatchYn:"", requestedBy:"jerry.huang", events:[], source:"Single"
+  }, o);
+}
+
+let accounts = [
+  mkAcct({vaccountNo:"9876543210123",accountNm:"XREX",bankCd:"023",status:"success",trdNo:"20260810HF004411",trdDt:"20260810",trdTm:"103122",validTo:"20501231235959",
+    depositedAmt:150000000,depositor:"홍길동",nmMatchYn:"Y",
+    events:[{a:"Issuance requested (trdType=1)",u:"jerry.huang",t:"2026-08-10 10:31:22",note:"outRsltCd=0000 · VA 9876543210123 returned · awaiting Hecto confirmation file"},
+            {a:"Confirmed effective by Hecto file",u:"op.manual",t:"2026-08-10 14:02:51",note:"VACCOUNT_LIST_20260810.csv on SFTP · first deposit dpAmt=150,000,000 KRW · nmMatchYn=Y"}]}),
+  mkAcct({vaccountNo:"9876543210456",accountNm:"XREX KR",bankCd:"023",status:"success",trdNo:"20260811HF004498",trdDt:"20260811",trdTm:"091544",validTo:"",
+    depositedAmt:42000000,depositor:"김민준",nmMatchYn:"E",
+    events:[{a:"Issuance requested (trdType=1)",u:"jerry.huang",t:"2026-08-11 09:15:44",note:"outRsltCd=0000"},
+            {a:"Confirmed effective by Hecto file",u:"op.manual",t:"2026-08-11 16:44:03",note:"VACCOUNT_LIST_20260811.csv · nmMatchYn=E (bank did not provide actual depositor name)"}]}),
+  mkAcct({vaccountNo:"9876543210789",accountNm:"XREX-A012",bankCd:"088",status:"success",trdNo:"20260813HF004712",trdDt:"20260813",trdTm:"094810",validTo:"20261231235959",
+    events:[{a:"Issuance requested (trdType=1)",u:"amy.lin",t:"2026-08-13 09:48:10",note:"outRsltCd=0000 · awaiting Hecto confirmation file"}],source:"Batch B-20260813-01"}),
+  mkAcct({vaccountNo:"9876543211001",accountNm:"XREX-A013",bankCd:"088",status:"success",trdNo:"20260813HF004713",trdDt:"20260813",trdTm:"094812",validTo:"20261231235959",
+    events:[{a:"Issuance requested (trdType=1)",u:"amy.lin",t:"2026-08-13 09:48:12",note:"outRsltCd=0000 · awaiting Hecto confirmation file"}],source:"Batch B-20260813-01"}),
+  mkAcct({vaccountNo:"9876543209988",accountNm:"XREX OLD",bankCd:"023",status:"terminated",trdNo:"20260702HF003120",trdDt:"20260702",trdTm:"140255",validTo:"",
+    events:[{a:"Issuance requested (trdType=1)",u:"jerry.huang",t:"2026-07-02 14:02:55",note:"outRsltCd=0000"},
+            {a:"Confirmed effective by Hecto file",u:"op.manual",t:"2026-07-03 11:12:07",note:"VACCOUNT_LIST_20260703.csv"},
+            {a:"Termination requested (trdType=2)",u:"jerry.huang",t:"2026-08-05 17:20:31",note:"Reason: PoC test account no longer needed · outRsltCd=0000"}]}),
+  mkAcct({vaccountNo:"9876543210222",accountNm:"XREX JP",bankCd:"020",status:"success",trdNo:"20260728HF003901",trdDt:"20260728",trdTm:"113005",validTo:"",
+    depositedAmt:8800000,depositor:"이서준",nmMatchYn:"N",
+    events:[{a:"Issuance requested (trdType=1)",u:"amy.lin",t:"2026-07-28 11:30:05",note:"outRsltCd=0000"},
+            {a:"Confirmed effective by Hecto file",u:"op.manual",t:"2026-07-29 09:02:44",note:"VACCOUNT_LIST_20260729.csv · nmMatchYn=N — flagged for review"},
+            {a:"Account holder name changed (trdType=3)",u:"jerry.huang",t:"2026-08-06 10:04:19",note:"XREX KR2 → XREX JP",diff:[{f:"accountNm",from:"XREX KR2",to:"XREX JP"}]}]}),
+  mkAcct({vaccountNo:"",accountNm:"XREX-A014",bankCd:"",status:"failed",trdNo:"20260813HF004720",trdDt:"20260813",trdTm:"101902",
+    outStatCd:"0031",outRsltCd:"PY98",outRsltMsg:"Invalid request parameter (accountNm)",mchtId:"mid_test",
+    events:[{a:"Issuance requested (trdType=1)",u:"amy.lin",t:"2026-08-13 10:19:02",note:"FAILED · outStatCd=0031 · outRsltCd=PY98"}],source:"Batch B-20260813-01"}),
+  mkAcct({vaccountNo:"9876543211055",accountNm:"XREX-A015",bankCd:"090",status:"success",trdNo:"20260812HF004650",trdDt:"20260812",trdTm:"155501",validTo:"20270630235959",mchtId:"mid_xrex_kr02",
+    events:[{a:"Issuance requested (trdType=1)",u:"jerry.huang",t:"2026-08-12 15:55:01",note:"outRsltCd=0000 · awaiting Hecto confirmation file"}]})
+];
+
+let batches = [
+  {id:"B-20260813-01", file:"VA_issuance_20260813.xlsx", rows:4, ok:3, fail:1,
+   by:"amy.lin", at:"2026-08-13 09:47:55", status:"Completed",
+   detail:[
+     {n:1,mchtId:"mid_xrex_kr01",accountNm:"XREX-A012",validTo:"20261231235959",res:"0000",va:"9876543210789",bank:"088"},
+     {n:2,mchtId:"mid_xrex_kr01",accountNm:"XREX-A013",validTo:"20261231235959",res:"0000",va:"9876543211001",bank:"088"},
+     {n:3,mchtId:"mid_test",accountNm:"XREX-A014-TOO-LONG",validTo:"",res:"PY98",va:"",bank:""},
+     {n:4,mchtId:"mid_xrex_kr01",accountNm:"XREX-A016",validTo:"",res:"0000",va:"9876543211077",bank:"088"}
+   ]},
+  {id:"B-20260806-02", file:"VA_issuance_batch_aug.xlsx", rows:12, ok:12, fail:0,
+   by:"jerry.huang", at:"2026-08-06 16:12:30", status:"Completed", detail:[]},
+  {id:"B-20260801-01", file:"VA_terminate_list.xlsx", rows:5, ok:4, fail:1,
+   by:"jerry.huang", at:"2026-08-01 11:05:02", status:"Completed · Termination", detail:[]}
+];
+
+/* ---------- FTP demo tree (files sorted newest first at render) ---------- */
+const FTP = {
+  host:"ftp.settlebank.co.kr", user:"xrex_op", dir:"/HECTO/XREX",
+  lastSync:"2026-08-13 09:05:12",
+  tree:{
+    "/HECTO/XREX":[
+      {name:"20260813",type:"dir",mtime:"2026-08-13 06:05:00"},
+      {name:"20260812",type:"dir",mtime:"2026-08-12 06:05:00"},
+      {name:"20260811",type:"dir",mtime:"2026-08-11 06:05:00"},
+      {name:"20260810",type:"dir",mtime:"2026-08-10 06:05:00"},
+      {name:"monthly",type:"dir",mtime:"2026-08-01 06:10:00"},
+      {name:"README_FILE_LAYOUT.txt",type:"txt",size:4213,mtime:"2026-04-24 10:00:00"}
+    ],
+    "/HECTO/XREX/20260813":[
+      {name:"VACCOUNT_LIST_20260813.csv",type:"csv",size:184320,mtime:"2026-08-13 06:04:58"},
+      {name:"DEPOSIT_DETAIL_20260813.csv",type:"csv",size:61440,mtime:"2026-08-13 06:04:41"},
+      {name:"TRANSACTION_20260813.xlsx",type:"xls",size:238592,mtime:"2026-08-13 06:04:22"},
+      {name:"RECON_SUMMARY_20260813.csv",type:"csv",size:12288,mtime:"2026-08-13 06:03:55"}
+    ],
+    "/HECTO/XREX/20260812":[
+      {name:"VACCOUNT_LIST_20260812.csv",type:"csv",size:180224,mtime:"2026-08-12 06:04:51"},
+      {name:"DEPOSIT_DETAIL_20260812.csv",type:"csv",size:73728,mtime:"2026-08-12 06:04:37"},
+      {name:"TRANSACTION_20260812.xlsx",type:"xls",size:245760,mtime:"2026-08-12 06:04:18"},
+      {name:"RECON_SUMMARY_20260812.csv",type:"csv",size:11264,mtime:"2026-08-12 06:03:49"},
+      {name:"DEPOSIT_CANCEL_20260812.csv",type:"csv",size:2048,mtime:"2026-08-12 06:03:44"}
+    ],
+    "/HECTO/XREX/20260811":[
+      {name:"VACCOUNT_LIST_20260811.csv",type:"csv",size:176128,mtime:"2026-08-11 06:04:55"},
+      {name:"DEPOSIT_DETAIL_20260811.csv",type:"csv",size:57344,mtime:"2026-08-11 06:04:33"},
+      {name:"TRANSACTION_20260811.xlsx",type:"xls",size:229376,mtime:"2026-08-11 06:04:11"}
+    ],
+    "/HECTO/XREX/20260810":[
+      {name:"VACCOUNT_LIST_20260810.csv",type:"csv",size:172032,mtime:"2026-08-10 06:04:47"},
+      {name:"DEPOSIT_DETAIL_20260810.csv",type:"csv",size:49152,mtime:"2026-08-10 06:04:29"},
+      {name:"TRANSACTION_20260810.xlsx",type:"xls",size:221184,mtime:"2026-08-10 06:04:02"}
+    ],
+    "/HECTO/XREX/monthly":[
+      {name:"MONTHLY_STATEMENT_202607.zip",type:"zip",size:3145728,mtime:"2026-08-01 06:10:00"},
+      {name:"MONTHLY_STATEMENT_202606.zip",type:"zip",size:2988032,mtime:"2026-07-01 06:10:00"},
+      {name:"MONTHLY_STATEMENT_202605.zip",type:"zip",size:3040000,mtime:"2026-06-01 06:10:00"}
+    ]
+  }
+};
+let ftpPath = "/HECTO/XREX";
+
+/* ---------- Filters ---------- */
+let vaFilter = {q:"", status:"", bank:"", mcht:"", from:"", to:""};
+
+/* ---------- Simulated A2 API ---------- */
+let forcedResult = "";   // "" = auto (success), else forced result code
+let latencyMs = 900;
+
+function fakeVaNo(){
+  return "98765432" + String(Math.floor(Math.random()*90000)+10000);
+}
+function callA2(params){
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      const t = ts(0);
+      const rc = forcedResult || "0000";
+      const ok = rc === "0000";
+      const res = {
+        mchtId: params.mchtId,
+        trdNo: t.dt + "HF" + String(Math.floor(Math.random()*9000)+1000),
+        trdDt: t.dt, trdTm: t.tm,
+        outStatCd: ok ? "0021" : "0031",
+        outRsltCd: rc,
+        outRsltMsg: ok ? "정상처리" : RESULT_CODES[rc],
+        bankCd: ok ? (params.bankCd || ["023","088","090"][Math.floor(Math.random()*3)]) : (params.bankCd||""),
+        vaccountNo: ok ? (params.vaccountNo || fakeVaNo()) : (params.vaccountNo||"")
+      };
+      resolve(res);
+    }, latencyMs);
+  });
+}
+
+/* ============================================================
+   Navigation
+   ============================================================ */
+const NAV = [
+  {group:"Fiat Channels", items:[
+    {id:"va", label:"Virtual Accounts", count:()=>accounts.filter(a=>a.status!=="terminated").length},
+    {id:"batches", label:"Batch Requests", count:()=>batches.length},
+    {id:"ftp", label:"FTP Files"},
+    {id:"deposits", label:"Deposit Notifications", disabled:true}
+  ]},
+  {group:"Reference", items:[
+    {id:"notes", label:"Spec Notes & Open Items"}
+  ]}
+];
+
+function renderNav(){
+  let h = '<div class="nav-item" style="font-weight:600;color:var(--ink)">Hecto Financial</div>';
+  NAV.forEach(g=>{
+    h += '<div class="nav-group"><div class="nav-group-label">'+g.group+'</div>';
+    g.items.forEach(it=>{
+      const cls = "nav-item child" + (route===it.id?" active":"") + (it.disabled?" disabled":"");
+      const cnt = it.count ? '<span class="cnt">'+it.count()+'</span>' : (it.disabled?'<span class="cnt">soon</span>':'');
+      h += '<div class="'+cls+'" '+(it.disabled?'title="Out of scope for this prototype"':'onclick="go(\''+it.id+'\')"')+'>'+it.label+cnt+'</div>';
+    });
+    h += '</div>';
+  });
+  document.getElementById("nav").innerHTML = h;
+}
+function go(r){ route = r; closeDrawer(); render(); window.scrollTo(0,0); }
+
+/* ============================================================
+   Render
+   ============================================================ */
+function render(){
+  renderNav();
+  const c = document.getElementById("content");
+  if(route==="va") c.innerHTML = viewVA();
+  else if(route==="batches") c.innerHTML = viewBatches();
+  else if(route==="ftp") c.innerHTML = viewFTP();
+  else if(route==="notes") c.innerHTML = viewNotes();
+  bindFilters();
+}
+
+function head(crumb,title,desc,actions){
+  return '<div class="crumb">'+crumb+'</div>'+
+    '<div class="page-head"><div><h1 class="page-title">'+title+'</h1>'+
+    (desc?'<div class="page-desc">'+desc+'</div>':'')+
+    '</div><div class="page-head-actions">'+(actions||'')+'</div></div>';
+}
+
+function statusTag(s){
+  const map = {success:"Request Successful", failed:"Request Failed", terminated:"Terminated"};
+  return '<span class="tag '+s+'"><span class="dot"></span>'+map[s]+'</span>';
+}
+
+/* ---------- Page: Virtual Accounts ---------- */
+function filteredAccounts(){
+  return accounts.filter(a=>{
+    const f = vaFilter;
+    if(f.q){
+      const q = f.q.toLowerCase();
+      if(!((a.vaccountNo||"").includes(q) || a.accountNm.toLowerCase().includes(q) || (a.trdNo||"").toLowerCase().includes(q))) return false;
+    }
+    if(f.status && a.status!==f.status) return false;
+    if(f.bank && a.bankCd!==f.bank) return false;
+    if(f.mcht && a.mchtId!==f.mcht) return false;
+    if(f.from && a.trdDt && a.trdDt < f.from.replace(/-/g,"")) return false;
+    if(f.to && a.trdDt && a.trdDt > f.to.replace(/-/g,"")) return false;
+    return true;
+  }).sort((a,b)=> (b.trdDt+b.trdTm).localeCompare(a.trdDt+a.trdTm));
+}
+
+function viewVA(){
+  const rows = filteredAccounts();
+  let h = head(
+    'Pay <span>/</span> Fiat Channels <span>/</span> Hecto Financial <span>/</span> Virtual Accounts',
+    'Virtual Accounts',
+    'Issue, terminate and rename Hecto Financial KRW deposit virtual accounts (API <span class="mono">A2 · PYA2 · /pyag/v1/fxVaccount</span>). Each row is one virtual account and its latest A2 request result.',
+    '<button class="icon-btn" title="Activity Log" aria-label="Activity Log" onclick="openGlobalLog()">🕘</button>'+
+    '<button class="btn" onclick="openBulk()">⬆ Bulk Import (Excel)</button>'+
+    '<button class="btn primary" onclick="openIssue()">+ New Virtual Account</button>'
+  );
+
+  h += '<div class="card">';
+  h += '<div class="filters">'+
+    '<div class="f"><label>Search</label><input type="text" id="fq" placeholder="Virtual account no. / owner name / trdNo" value="'+vaFilter.q+'"></div>'+
+    '<div class="f"><label>Status</label><select id="fstatus">'+opt(["","success","failed","terminated"],["All","Request Successful","Request Failed","Terminated"],vaFilter.status)+'</select></div>'+
+    '<div class="f"><label>Bank</label><select id="fbank"><option value="">All</option>'+
+      BANKS.map(b=>'<option value="'+b.code+'"'+(vaFilter.bank===b.code?" selected":"")+'>'+b.code+' · '+b.name+'</option>').join('')+'</select></div>'+
+    '<div class="f"><label>Merchant ID</label><select id="fmcht"><option value="">All</option>'+
+      MERCHANTS.map(m=>'<option'+(vaFilter.mcht===m?" selected":"")+'>'+m+'</option>').join('')+'</select></div>'+
+    '<div class="f"><label>Request date from</label><input type="date" id="ffrom" value="'+vaFilter.from+'"></div>'+
+    '<div class="f"><label>to</label><input type="date" id="fto" value="'+vaFilter.to+'"></div>'+
+    '<div class="f"><label>&nbsp;</label><button class="btn" onclick="resetFilters()">Reset</button></div>'+
+  '</div>';
+
+  h += '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Virtual Account No.</th><th>Bank</th><th>Account Owner Name</th><th>Merchant ID</th>'+
+    '<th>Valid To</th><th>Status</th><th>Last A2 Result</th><th>Last Request</th><th class="stick" style="width:158px">Actions</th>'+
+    '</tr></thead><tbody>';
+
+  if(!rows.length){
+    h += '<tr><td colspan="9"><div class="empty">No virtual accounts match these filters.</div></td></tr>';
+  }
+  rows.forEach(a=>{
+    const rc = a.outRsltCd;
+    const rcTag = rc==="0000"
+      ? '<span class="tag plain mono">0000</span>'
+      : '<span class="tag failed mono">'+rc+'</span>';
+    h += '<tr>'+
+      '<td><span class="mono" style="font-weight:600">'+(a.vaccountNo||'<span class="muted">— not issued —</span>')+'</span>'+
+        '<div class="sub">'+a.crc+' deposit VA</div></td>'+
+      '<td>'+(a.bankCd?('<span class="mono">'+a.bankCd+'</span><div class="sub">'+bankName(a.bankCd)+'</div>'):'<span class="muted">—</span>')+'</td>'+
+      '<td>'+esc(a.accountNm)+'<div class="sub">'+a.accountNm.length+'/10 chars</div></td>'+
+      '<td class="mono">'+a.mchtId+'</td>'+
+      '<td class="nowrap">'+fmtValidTo(a.validTo)+'</td>'+
+      '<td>'+statusTag(a.status)+'</td>'+
+      '<td style="max-width:170px">'+rcTag+'<div class="sub">'+esc(a.outRsltMsg||"")+'</div></td>'+
+      '<td class="nowrap"><span class="mono">'+fmtTrd(a.trdDt,a.trdTm)+'</span><div class="sub">'+esc(a.requestedBy)+' · '+
+        (a.source==="Single"?'<span class="muted">Single</span>':'<span style="color:var(--blue)">'+esc(a.source)+'</span>')+'</div></td>'+
+      '<td class="stick"><div class="row-actions">'+
+        '<button class="btn-link" onclick="openDetail(\''+a.id+'\')">View</button>'+
+        (a.status==="success"
+          ? '<button class="btn-link" onclick="openRename(\''+a.id+'\')">Rename</button>'+
+            '<button class="btn-link" style="color:var(--red)" onclick="openTerminate(\''+a.id+'\')">Terminate</button>'
+          : (a.status==="failed" ? '<button class="btn-link" onclick="openIssue(\''+a.id+'\')">Retry</button>' : '<span class="muted">—</span>'))+
+      '</div></td>'+
+    '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div class="tbl-foot">Showing <b style="color:var(--ink)">&nbsp;'+rows.length+'&nbsp;</b> of '+accounts.length+' records</div>';
+  h += '<div class="legend">'+
+    '<span><b>Request Successful</b> — A2 returned outStatCd=0021 + outRsltCd=0000 with a virtual account number</span>'+
+    '<span><b>Request Failed</b> — A2 returned outStatCd=0031</span>'+
+    '<span><b>Terminated</b> — A2 trdType=2 succeeded</span>'+
+  '</div>';
+  h += '</div>';
+
+  h += '<div class="callout warn"><b>Request Successful does not mean the account is live.</b> This column reflects the A2 API result only. '+
+       'A virtual account returned by A2 becomes usable only after Hecto confirms it in the file they send back, so OP must check the '+
+       '<button class="btn-link" onclick="go(\'ftp\')">FTP Files</button> page before giving an account number to a customer. '+
+       'No operational "confirmed / effective" state is modelled here until that hand-off is defined.</div>';
+  return h;
+}
+
+function opt(vals,labels,cur){
+  return vals.map((v,i)=>'<option value="'+v+'"'+(cur===v?" selected":"")+'>'+labels[i]+'</option>').join('');
+}
+function bindFilters(){
+  const map = {fq:"q", fstatus:"status", fbank:"bank", fmcht:"mcht", ffrom:"from", fto:"to"};
+  Object.keys(map).forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const ev = el.tagName==="SELECT"||el.type==="date" ? "change" : "input";
+    el.addEventListener(ev, e=>{
+      vaFilter[map[id]] = e.target.value;
+      const c=document.getElementById("content"); c.innerHTML = viewVA(); bindFilters();
+      const again = document.getElementById(id);
+      if(again && ev==="input"){ again.focus(); again.setSelectionRange(again.value.length,again.value.length); }
+    });
+  });
+}
+function resetFilters(){ vaFilter={q:"",status:"",bank:"",mcht:"",from:"",to:""}; render(); }
+
+/* ---------- Page: Batch Requests ---------- */
+function viewBatches(){
+  let h = head(
+    'Pay <span>/</span> Fiat Channels <span>/</span> Hecto Financial <span>/</span> Batch Requests',
+    'Batch Requests',
+    'Excel uploads that were expanded into individual A2 calls. Each batch keeps its per-row request payload and Hecto response so failures can be traced without re-reading the file.',
+    '<button class="btn" onclick="downloadTemplate()">⬇ Download template</button>'+
+    '<button class="btn primary" onclick="openBulk()">⬆ New Batch Import</button>'
+  );
+  h += '<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Batch ID</th><th>File</th><th>Rows</th><th>Success</th><th>Failed</th><th>Status</th><th>Uploaded by</th><th>Uploaded at</th><th style="width:90px">Actions</th>'+
+    '</tr></thead><tbody>';
+  batches.forEach(b=>{
+    h += '<tr>'+
+      '<td class="mono" style="font-weight:600">'+b.id+'</td>'+
+      '<td>'+esc(b.file)+'</td>'+
+      '<td>'+b.rows+'</td>'+
+      '<td><span class="tag active">'+b.ok+'</span></td>'+
+      '<td>'+(b.fail?'<span class="tag failed">'+b.fail+'</span>':'<span class="muted">0</span>')+'</td>'+
+      '<td><span class="tag plain">'+esc(b.status)+'</span></td>'+
+      '<td>'+esc(b.by)+'</td>'+
+      '<td class="mono nowrap">'+b.at+'</td>'+
+      '<td>'+(b.detail.length?'<button class="btn-link" onclick="openBatch(\''+b.id+'\')">Details</button>':'<span class="muted">—</span>')+'</td>'+
+    '</tr>';
+  });
+  h += '</tbody></table></div><div class="tbl-foot">'+batches.length+' batches</div></div>';
+  return h;
+}
+
+/* ---------- Page: FTP ---------- */
+function fmtSize(n){
+  if(n==null) return "—";
+  if(n<1024) return n+" B";
+  if(n<1024*1024) return (n/1024).toFixed(1)+" KB";
+  return (n/1024/1024).toFixed(2)+" MB";
+}
+function viewFTP(){
+  const items = (FTP.tree[ftpPath]||[]).slice().sort((a,b)=>{
+    return b.mtime.localeCompare(a.mtime);
+  });
+  const segs = ftpPath.split("/").filter(Boolean);
+  let acc="", crumbs='<span class="seg" onclick="ftpGo(\'/HECTO/XREX\')">'+FTP.host+'</span>';
+  segs.forEach((s,i)=>{
+    acc += "/"+s;
+    const last = i===segs.length-1;
+    crumbs += ' <span class="muted">/</span> <span class="seg'+(last?' cur':'')+'"'+(last?'':' onclick="ftpGo(\''+acc+'\')"')+'>'+s+'</span>';
+  });
+
+  let h = head(
+    'Pay <span>/</span> Fiat Channels <span>/</span> Hecto Financial <span>/</span> FTP Files',
+    'FTP Files',
+    'Read-only browser over the Hecto Financial SFTP drop folder. Files are listed exactly as they exist on the server, newest first. Downloading saves a copy to your local machine — nothing is parsed or imported by the CMS.',
+    '<button class="btn" onclick="toast(\'Directory listing refreshed (demo)\')">↻ Refresh</button>'
+  );
+
+  h += '<div class="card"><div class="card-body tight"><div class="conn">'+
+    '<span>Host <b class="mono">'+FTP.host+'</b></span>'+
+    '<span>User <b class="mono">'+FTP.user+'</b></span>'+
+    '<span>Root <b class="mono">'+FTP.dir+'</b></span>'+
+    '<span>Protocol <b>SFTP · read-only</b></span>'+
+    '<span>Last listing <b class="mono">'+FTP.lastSync+'</b></span>'+
+  '</div></div></div>';
+
+  h += '<div class="card">';
+  h += '<div class="card-head"><div class="path-bar">'+crumbs+'</div>'+
+       '<div class="right muted">Sorted by modified · newest first</div></div>';
+  h += '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+       '<th>Name</th><th style="width:130px">Type</th><th style="width:120px">Size</th><th style="width:190px">Modified</th><th style="width:120px">Actions</th>'+
+       '</tr></thead><tbody>';
+
+  if(ftpPath!=="/HECTO/XREX"){
+    const parent = ftpPath.split("/").slice(0,-1).join("/") || "/HECTO/XREX";
+    h += '<tr><td colspan="5"><span class="fname"><span class="fico dir">↑</span>'+
+         '<button class="btn-link" onclick="ftpGo(\''+parent+'\')">.. (parent directory)</button></span></td></tr>';
+  }
+  if(!items.length){
+    h += '<tr><td colspan="5"><div class="empty">This folder is empty.</div></td></tr>';
+  }
+  items.forEach(f=>{
+    const isDir = f.type==="dir";
+    const icoTxt = isDir?"▸":(f.type==="csv"?"C":f.type==="xls"?"X":f.type==="zip"?"Z":"T");
+    h += '<tr>'+
+      '<td><span class="fname"><span class="fico '+f.type+'">'+icoTxt+'</span>'+
+        (isDir ? '<button class="btn-link" onclick="ftpGo(\''+ftpPath+'/'+f.name+'\')">'+f.name+'/</button>'
+               : '<span class="mono">'+f.name+'</span>')+
+      '</span></td>'+
+      '<td>'+(isDir?'<span class="muted">Folder</span>':'<span class="tag plain">'+f.type.toUpperCase()+'</span>')+'</td>'+
+      '<td class="mono">'+(isDir?'<span class="muted">—</span>':fmtSize(f.size))+'</td>'+
+      '<td class="mono nowrap">'+f.mtime+'</td>'+
+      '<td>'+(isDir?'<button class="btn-link" onclick="ftpGo(\''+ftpPath+'/'+f.name+'\')">Open</button>'
+                   :'<button class="btn-link" onclick="fakeDownload(\''+f.name+'\')">Download</button>')+'</td>'+
+    '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div class="tbl-foot">'+items.length+' items in <span class="mono">&nbsp;'+ftpPath+'</span></div></div>';
+
+  h += '<div class="callout"><b>Scope note.</b> This page only lists and downloads. It does not read file contents, reconcile balances, or change any virtual account status. '+
+       'The folder layout shown is a placeholder — the real path, file naming and cut-off time still need to be confirmed with Hecto.</div>';
+  return h;
+}
+function ftpGo(p){ ftpPath = p; render(); }
+function fakeDownload(n){ toast('Downloading "'+n+'" to your local Downloads folder…','ok'); }
+
+/* ---------- Page: Notes ---------- */
+function viewNotes(){
+  let h = head('Pay <span>/</span> Fiat Channels <span>/</span> Hecto Financial <span>/</span> Spec Notes',
+    'Spec Notes & Open Items',
+    'What this prototype assumes, and what still has to be answered by Hecto before build. Kept inside the prototype so reviewers see the gaps rather than a UI that looks finished.');
+
+  const items = [
+    ["Known","A2 request fields","<span class='mono'>mchtId</span> ●, <span class='mono'>trdType</span> ● (1/2/3), <span class='mono'>validTo</span> ○, <span class='mono'>accountNm</span> ◐ (max 10 chars, URL-encoded), <span class='mono'>bankCd</span> ◐, <span class='mono'>vaccountNo</span> ◐. Success = <span class='mono'>outStatCd=0021</span> AND <span class='mono'>outRsltCd=0000</span>."],
+    ["Known","No currency parameter","A2 has no currency field and <span class='mono'>bankCd</span> is a 3-digit Korean bank code, so every account issued through this screen is KRW. JPY accounts cannot be issued from this UI until Hecto explains how currency is selected (open question N1)."],
+    ["Known","Status machine is API-result only","<span class='mono'>Request Successful</span> / <span class='mono'>Request Failed</span> / <span class='mono'>Terminated</span> map 1:1 to the A2 response. An account is <b>not</b> live at Request Successful — Hecto confirms it later in a file, so the CMS deliberately carries no Active state."],
+    ["Unknown","Confirmation hand-off","Which Hecto file confirms an issued account is effective, on what cut-off, and whether OP reconciles it by hand. Until this is answered OP must not release an account number to a customer on the API result alone."],
+    ["Assumed","Bank code on issuance","The issuance sample does not send <span class='mono'>bankCd</span> — Hecto returns it. This prototype therefore treats bank as read-only output on issuance, and required input on terminate / rename."],
+    ["Unknown","Spec typo in the Change sample","The A2 sheet's <span class='mono'>[Change]</span> request sample sends <span class='mono'>trdType=2</span> while the field description says <span class='mono'>3</span> is Change of account holder name. Needs written confirmation before implementation."],
+    ["Unknown","Purpose Form gate","Hecto's 2026-08-10 reply says issuance requires a <b>Confirmation of Deposit Virtual Account Issuance Purpose Form</b>. If that is per-account rather than per-merchant, the bulk import flow on this prototype is not viable as designed."],
+    ["Unknown","Rename side effects","If a customer has already been told the old account holder name, does a <span class='mono'>trdType=3</span> rename risk deposits being rejected or returned? Needs an operational answer before Rename is exposed to OP."],
+    ["Unknown","FTP folder contract","Path, file naming, generation time, retention, and whether the same data is also available by API. All placeholder in this prototype."],
+    ["Out of scope","Deposit Notifications page","Listed in the sidebar but not built. Included to show where deposit matching (<span class='mono'>nmMatchYn</span>) and deposit-cancellation reversal (<span class='mono'>cnclYn=Y</span>) would live — separate from the A2 request status shown on the Virtual Accounts page."],
+    ["Out of scope","Permissions & approval","This prototype shows a single all-permissions operator. Whether Terminate needs a second approver is an open control decision."]
+  ];
+  h += '<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:110px">Certainty</th><th style="width:250px">Item</th><th>Detail</th></tr></thead><tbody>';
+  items.forEach(r=>{
+    const cls = r[0]==="Known"?"active":r[0]==="Assumed"?"pending":r[0]==="Unknown"?"failed":"terminated";
+    h += '<tr><td><span class="tag '+cls+'">'+r[0]+'</span></td><td style="font-weight:600">'+r[1]+'</td><td>'+r[2]+'</td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+  return h;
+}
+
+/* ============================================================
+   Drawers
+   ============================================================ */
+function openDrawer(title, sub, body, foot, wide){
+  document.getElementById("drawerTitle").innerHTML = title;
+  document.getElementById("drawerSub").innerHTML = sub||"";
+  document.getElementById("drawerBody").innerHTML = body;
+  document.getElementById("drawerFoot").innerHTML = foot||"";
+  const d = document.getElementById("drawer");
+  d.classList.toggle("wide", !!wide);
+  d.classList.add("open");
+  document.getElementById("scrim").classList.add("open");
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("scrim").classList.remove("open");
+}
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeDrawer(); });
+
+function devPanel(){
+  return '<div class="dev"><div class="t">Prototype controls — force the API response</div>'+
+    '<select id="forceRes" onchange="forcedResult=this.value">'+
+      Object.keys(RESULT_CODES).map(k=>'<option value="'+(k==="0000"?"":k)+'"'+((forcedResult||"0000")===k?" selected":"")+'>'+k+' · '+RESULT_CODES[k]+'</option>').join('')+
+    '</select>'+
+    ' <span class="muted">Use this to review the error states without a real Hecto testbed.</span></div>';
+}
+
+function respBlock(id){
+  return '<div class="form-sec"><div class="form-sec-title">System Response <span class="api">· Merchant ← Hecto Financial</span></div>'+
+    '<div id="'+id+'"><div class="callout" style="margin:0">Not called yet. Fill the request fields and press the action button below — the response returned by Hecto will appear here.</div></div></div>';
+}
+function respRender(r){
+  const ok = r.outStatCd==="0021" && r.outRsltCd==="0000";
+  let h = '<div class="callout '+(ok?"ok":"err")+'">'+
+    (ok? '<b>Success.</b> <span class="k">outStatCd=0021</span> + <span class="k">outRsltCd=0000</span>'
+       : '<b>Failed.</b> <span class="k">outStatCd='+r.outStatCd+'</span> · <span class="k">outRsltCd='+r.outRsltCd+'</span> — '+esc(r.outRsltMsg))+
+  '</div>';
+  h += '<div class="kv">'+
+    kvRow("Merchant ID","mchtId",r.mchtId)+
+    kvRow("Transaction Number","trdNo",r.trdNo)+
+    kvRow("Transaction Date","trdDt",r.trdDt)+
+    kvRow("Transaction Time","trdTm",r.trdTm)+
+    kvRow("Transaction Status","outStatCd",r.outStatCd+(r.outStatCd==="0021"?" (Success)":" (Failure)"))+
+    kvRow("Response Result","outRsltCd",r.outRsltCd)+
+    kvRow("Response Message","outRsltMsg",r.outRsltMsg)+
+    kvRow("Bank Code","bankCd",r.bankCd? r.bankCd+" · "+bankName(r.bankCd) : "—")+
+    kvRow("Virtual Account Number","vaccountNo", r.vaccountNo? '<b style="font-size:14px">'+r.vaccountNo+'</b>' : "—")+
+  '</div>';
+  return h;
+}
+function kvRow(label,param,val){
+  return '<div class="kv-row"><div>'+label+'<span class="pn">'+param+'</span></div><div class="mono">'+(val||"—")+'</div></div>';
+}
+
+/* ---------- Issue (trdType=1) ---------- */
+function openIssue(retryId){
+  const src = retryId ? accounts.find(a=>a.id===retryId) : null;
+  const body = devPanel()+
+  '<div class="form-sec"><div class="form-sec-title">Request <span class="api">· Merchant → Hecto Financial · POST /pyag/v1/fxVaccount</span></div>'+
+    '<div class="field"><label>Merchant ID <span class="param">mchtId</span> <span class="req">●</span></label>'+
+      '<select id="i_mcht">'+MERCHANTS.map(m=>'<option'+(src&&src.mchtId===m?" selected":"")+'>'+m+'</option>').join('')+'</select>'+
+      '<div class="hint"><span>Max 12. Merchant account registered with Hecto Financial.</span></div></div>'+
+    '<div class="field"><label>Transaction Type <span class="param">trdType</span> <span class="req">●</span></label>'+
+      '<input type="text" value="1 · Issuance" disabled>'+
+      '<div class="hint"><span>Fixed for this form. 2 = Termination, 3 = Change of account holder name.</span></div></div>'+
+    '<div class="field"><label>Account Owner Name <span class="param">accountNm</span> <span class="cond">◐</span></label>'+
+      '<input type="text" id="i_nm" maxlength="10" value="'+(src?esc(src.accountNm):"XREX")+'" oninput="nmCount()">'+
+      '<div class="hint"><span>Displayed to the payer when they look up the account. URL-encoded on send.</span><span id="nmc"></span></div></div>'+
+    '<div class="field"><label>Validity End Date &amp; Time <span class="param">validTo</span> <span class="opt">optional</span></label>'+
+      '<div class="grid2"><input type="date" id="i_vd" value="'+(src&&src.validTo?src.validTo.slice(0,4)+"-"+src.validTo.slice(4,6)+"-"+src.validTo.slice(6,8):"")+'">'+
+      '<input type="text" id="i_vt" placeholder="hhmmss (default 235959)" value="235959"></div>'+
+      '<div class="hint"><span>Leave the date empty for an indefinite account. Sent as <span class="mono">YYYYMMDDhhmmss</span>.</span><span id="vtprev" class="muted"></span></div></div>'+
+    '<div class="field"><label>Internal reference <span class="opt">XREX only — not sent to Hecto</span></label>'+
+      '<input type="text" id="i_ref" placeholder="e.g. customer UID, ticket no."></div>'+
+  '</div>'+
+  respBlock("issueResp");
+
+  const foot = '<button class="btn" onclick="closeDrawer()">Cancel</button>'+
+    '<button class="btn primary" id="btnIssue" onclick="doIssue()">Request for Virtual Account</button>';
+
+  openDrawer("New Virtual Account", "A2 · Issuance · trdType=1", body, foot, true);
+  nmCount();
+}
+function nmCount(){
+  const el = document.getElementById("i_nm"); if(!el) return;
+  const n = el.value.length;
+  const c = document.getElementById("nmc");
+  if(n===0) c.innerHTML = '<span class="err">Required</span>';
+  else if(n>10) c.innerHTML = '<span class="err">'+n+'/10 — too long</span>';
+  else c.innerHTML = '<span class="ok">'+n+'/10</span>';
+}
+async function doIssue(){
+  const nm = document.getElementById("i_nm").value.trim();
+  if(!nm){ toast("Account Owner Name is required","err"); return; }
+  if(nm.length>10){ toast("Account Owner Name must be 10 characters or fewer","err"); return; }
+  const mcht = document.getElementById("i_mcht").value;
+  const vd = document.getElementById("i_vd").value.replace(/-/g,"");
+  const vt = (document.getElementById("i_vt").value||"235959").replace(/\D/g,"").padEnd(6,"0").slice(0,6);
+  const validTo = vd ? vd+vt : "";
+
+  const btn = document.getElementById("btnIssue");
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Requesting…';
+  document.getElementById("issueResp").innerHTML =
+    '<div class="callout"><span class="spinner dark"></span> &nbsp;POST <span class="k">/pyag/v1/fxVaccount</span> — waiting for Hecto Financial (timeout 30s)…</div>';
+
+  const r = await callA2({mchtId:mcht});
+  document.getElementById("issueResp").innerHTML = respRender(r);
+  btn.disabled = false; btn.innerHTML = "Request for Virtual Account";
+
+  const ok = r.outStatCd==="0021" && r.outRsltCd==="0000";
+  const now = ts(0);
+  const rec = mkAcct({
+    mchtId:mcht, accountNm:nm, validTo:validTo,
+    bankCd: ok? r.bankCd : "", vaccountNo: ok? r.vaccountNo : "",
+    status: ok? "success" : "failed",
+    trdNo:r.trdNo, trdDt:r.trdDt, trdTm:r.trdTm,
+    outStatCd:r.outStatCd, outRsltCd:r.outRsltCd, outRsltMsg:r.outRsltMsg,
+    requestedBy:"jerry.huang",
+    events:[{a:"Issuance requested (trdType=1)",u:"jerry.huang",t:now.iso,
+             note: ok? ("outRsltCd=0000 · VA "+r.vaccountNo+" returned · awaiting Hecto confirmation file")
+                     : ("FAILED · outStatCd="+r.outStatCd+" · outRsltCd="+r.outRsltCd)}]
+  });
+  accounts.unshift(rec);
+  renderNav();
+  if(ok) toast("Request successful · VA "+r.vaccountNo+" returned — not yet confirmed by Hecto","ok");
+  else toast("Request failed · "+r.outRsltCd+" "+r.outRsltMsg,"err");
+}
+
+/* ---------- Terminate (trdType=2) ---------- */
+function openTerminate(id){
+  const a = accounts.find(x=>x.id===id);
+  const body = devPanel()+
+  '<div class="callout warn"><b>This ends the account.</b> Any KRW sent to <span class="k">'+a.vaccountNo+'</span> after termination will be rejected or returned by the bank. Confirm with the customer-facing team that the account is no longer published anywhere.</div>'+
+  '<div class="form-sec"><div class="form-sec-title">Request <span class="api">· A2 · trdType=2 · Termination</span></div>'+
+    '<div class="field"><label>Merchant ID <span class="param">mchtId</span> <span class="req">●</span></label><input type="text" value="'+a.mchtId+'" disabled></div>'+
+    '<div class="field"><label>Transaction Type <span class="param">trdType</span> <span class="req">●</span></label><input type="text" value="2 · Termination" disabled></div>'+
+    '<div class="field"><label>Bank Code <span class="param">bankCd</span> <span class="cond">◐</span></label><input type="text" value="'+a.bankCd+' · '+bankName(a.bankCd)+'" disabled></div>'+
+    '<div class="field"><label>Virtual Account Number <span class="param">vaccountNo</span> <span class="cond">◐</span></label><input type="text" value="'+a.vaccountNo+'" disabled></div>'+
+    '<div class="field"><label>Termination reason <span class="opt">XREX only — recorded in Activity Log, not sent to Hecto</span></label>'+
+      '<textarea id="t_reason" rows="3" placeholder="Why is this account being closed?"></textarea></div>'+
+    '<div class="field"><label>Type the account number to confirm</label>'+
+      '<input type="text" id="t_confirm" placeholder="'+a.vaccountNo+'" oninput="checkTerm(\''+a.vaccountNo+'\')">'+
+      '<div class="hint"><span id="tchk" class="muted">Waiting for confirmation</span></div></div>'+
+  '</div>'+
+  respBlock("termResp");
+
+  const foot = '<button class="btn" onclick="closeDrawer()">Cancel</button>'+
+    '<button class="btn danger" id="btnTerm" disabled onclick="doTerminate(\''+a.id+'\')">Terminate Virtual Account</button>';
+  openDrawer("Terminate Virtual Account", '<span class="mono">'+a.vaccountNo+'</span> · '+esc(a.accountNm), body, foot, true);
+}
+function checkTerm(no){
+  const v = document.getElementById("t_confirm").value.trim();
+  const ok = v===no;
+  document.getElementById("tchk").innerHTML = ok? '<span class="ok">Matches</span>' : '<span class="muted">Waiting for confirmation</span>';
+  document.getElementById("btnTerm").disabled = !ok;
+}
+async function doTerminate(id){
+  const a = accounts.find(x=>x.id===id);
+  const reason = (document.getElementById("t_reason").value||"").trim() || "(no reason given)";
+  const btn = document.getElementById("btnTerm");
+  btn.disabled=true; btn.innerHTML='<span class="spinner dark"></span> Terminating…';
+  document.getElementById("termResp").innerHTML='<div class="callout"><span class="spinner dark"></span> &nbsp;POST <span class="k">/pyag/v1/fxVaccount</span> · trdType=2 …</div>';
+
+  const r = await callA2({mchtId:a.mchtId, bankCd:a.bankCd, vaccountNo:a.vaccountNo});
+  document.getElementById("termResp").innerHTML = respRender(r);
+  btn.innerHTML = "Terminate Virtual Account";
+  const ok = r.outStatCd==="0021" && r.outRsltCd==="0000";
+  const now = ts(0);
+  a.outStatCd=r.outStatCd; a.outRsltCd=r.outRsltCd; a.outRsltMsg=r.outRsltMsg;
+  a.trdNo=r.trdNo; a.trdDt=r.trdDt; a.trdTm=r.trdTm;
+  a.events.push({a:"Termination requested (trdType=2)",u:"jerry.huang",t:now.iso,
+    note:(ok?"outRsltCd=0000 · status set to Terminated":"FAILED · outRsltCd="+r.outRsltCd)+" · Reason: "+reason});
+  if(ok){ a.status="terminated"; toast("Virtual account terminated","ok"); }
+  else { btn.disabled=false; toast("Termination failed · "+r.outRsltCd,"err"); }
+  render();
+  if(ok) setTimeout(()=>{ openDetail(id); }, 400);
+}
+
+/* ---------- Rename (trdType=3) ---------- */
+function openRename(id){
+  const a = accounts.find(x=>x.id===id);
+  const body = devPanel()+
+  '<div class="callout warn"><b>Open item.</b> The A2 sheet\'s <span class="k">[Change]</span> request sample sends <span class="k">trdType=2</span> although the field description says <span class="k">3</span>. Treated as a documentation typo here — confirm with Hecto before build.</div>'+
+  '<div class="form-sec"><div class="form-sec-title">Request <span class="api">· A2 · trdType=3 · Change of account holder name</span></div>'+
+    '<div class="field"><label>Merchant ID <span class="param">mchtId</span> <span class="req">●</span></label><input type="text" value="'+a.mchtId+'" disabled></div>'+
+    '<div class="field"><label>Transaction Type <span class="param">trdType</span> <span class="req">●</span></label><input type="text" value="3 · Change of account holder name" disabled></div>'+
+    '<div class="field"><label>Bank Code <span class="param">bankCd</span> <span class="cond">◐</span></label><input type="text" value="'+a.bankCd+' · '+bankName(a.bankCd)+'" disabled></div>'+
+    '<div class="field"><label>Virtual Account Number <span class="param">vaccountNo</span> <span class="cond">◐</span></label><input type="text" value="'+a.vaccountNo+'" disabled></div>'+
+    '<div class="field"><label>New Account Owner Name <span class="param">accountNm</span> <span class="cond">◐</span></label>'+
+      '<input type="text" id="r_nm" maxlength="10" value="'+esc(a.accountNm)+'" oninput="renamePrev(\''+a.id+'\')">'+
+      '<div class="hint"><span>Max 10 characters. URL-encoded on send.</span><span id="rnmc"></span></div></div>'+
+    '<div class="field"><label>Change preview</label><div id="rdiff"></div></div>'+
+    '<div class="field"><label>Reason <span class="opt">XREX only</span></label><textarea id="r_reason" rows="2" placeholder="Why is the account holder name changing?"></textarea></div>'+
+  '</div>'+
+  respBlock("renResp");
+  const foot = '<button class="btn" onclick="closeDrawer()">Cancel</button>'+
+    '<button class="btn primary" id="btnRen" onclick="doRename(\''+a.id+'\')">Submit Name Change</button>';
+  openDrawer("Change Account Holder Name", '<span class="mono">'+a.vaccountNo+'</span>', body, foot, true);
+  renamePrev(a.id);
+}
+function renamePrev(id){
+  const a = accounts.find(x=>x.id===id);
+  const v = document.getElementById("r_nm").value;
+  document.getElementById("rnmc").innerHTML = v.length>10 ? '<span class="err">'+v.length+'/10</span>' :
+    (v.length===0?'<span class="err">Required</span>':'<span class="ok">'+v.length+'/10</span>');
+  document.getElementById("rdiff").innerHTML =
+    '<table class="diff"><thead><tr><th>Field</th><th>From</th><th>To</th></tr></thead><tbody>'+
+    '<tr><td class="mono">accountNm</td><td>'+esc(a.accountNm)+'</td><td class="to">'+(v?esc(v):'<span class="muted">—</span>')+'</td></tr>'+
+    '</tbody></table>';
+  const btn = document.getElementById("btnRen");
+  btn.disabled = (!v || v.length>10 || v===a.accountNm);
+}
+async function doRename(id){
+  const a = accounts.find(x=>x.id===id);
+  const nv = document.getElementById("r_nm").value.trim();
+  const reason = (document.getElementById("r_reason").value||"").trim() || "(no reason given)";
+  const btn = document.getElementById("btnRen");
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Submitting…';
+  document.getElementById("renResp").innerHTML='<div class="callout"><span class="spinner dark"></span> &nbsp;POST <span class="k">/pyag/v1/fxVaccount</span> · trdType=3 …</div>';
+
+  const r = await callA2({mchtId:a.mchtId, bankCd:a.bankCd, vaccountNo:a.vaccountNo});
+  document.getElementById("renResp").innerHTML = respRender(r);
+  btn.innerHTML="Submit Name Change";
+  const ok = r.outStatCd==="0021" && r.outRsltCd==="0000";
+  const now = ts(0), old = a.accountNm;
+  a.trdNo=r.trdNo; a.trdDt=r.trdDt; a.trdTm=r.trdTm;
+  a.outStatCd=r.outStatCd; a.outRsltCd=r.outRsltCd; a.outRsltMsg=r.outRsltMsg;
+  if(ok){
+    a.accountNm = nv;
+    a.events.push({a:"Account holder name changed (trdType=3)",u:"jerry.huang",t:now.iso,
+      note:"outRsltCd=0000 · Reason: "+reason, diff:[{f:"accountNm",from:old,to:nv}]});
+    toast("Account holder name updated to "+nv,"ok");
+  }else{
+    a.events.push({a:"Name change failed (trdType=3)",u:"jerry.huang",t:now.iso,note:"outRsltCd="+r.outRsltCd+" · "+r.outRsltMsg});
+    btn.disabled=false;
+    toast("Name change failed · "+r.outRsltCd,"err");
+  }
+  render();
+}
+
+/* ---------- Detail ---------- */
+function openDetail(id){
+  const a = accounts.find(x=>x.id===id);
+  let h = '<div class="form-sec"><div class="form-sec-title">Account</div><div class="kv">'+
+    kvRow("Virtual Account Number","vaccountNo", a.vaccountNo? '<b>'+a.vaccountNo+'</b>' : "— not issued —")+
+    kvRow("Bank","bankCd", a.bankCd? a.bankCd+" · "+bankName(a.bankCd) : "—")+
+    kvRow("Account Owner Name","accountNm", esc(a.accountNm))+
+    kvRow("Merchant ID","mchtId", a.mchtId)+
+    kvRow("Currency","—", a.crc+" (A2 has no currency parameter)")+
+    kvRow("Validity End","validTo", a.validTo? a.validTo : "Indefinite")+
+    kvRow("Status","—", statusTag(a.status))+
+    kvRow("Source","—", esc(a.source))+
+  '</div></div>';
+
+  h += '<div class="form-sec"><div class="form-sec-title">Latest A2 Response</div><div class="kv">'+
+    kvRow("Transaction Number","trdNo",a.trdNo)+
+    kvRow("Transaction Date / Time","trdDt / trdTm", fmtTrd(a.trdDt,a.trdTm))+
+    kvRow("Transaction Status","outStatCd",a.outStatCd)+
+    kvRow("Response Result","outRsltCd",a.outRsltCd)+
+    kvRow("Response Message","outRsltMsg",esc(a.outRsltMsg))+
+  '</div></div>';
+
+  if(a.depositedAmt>0){
+    h += '<div class="form-sec"><div class="form-sec-title">Deposit Notification <span class="api">· Hecto Financial → Merchant</span></div><div class="kv">'+
+      kvRow("Deposit Balance","blc", a.depositedAmt.toLocaleString()+" KRW")+
+      kvRow("Depositor Name","dpstrNm", esc(a.depositor))+
+      kvRow("Depositor Match","nmMatchYn", a.nmMatchYn==="Y"?'<span class="tag active">Y · Match</span>':a.nmMatchYn==="N"?'<span class="tag failed">N · Mismatch</span>':'<span class="tag pending">E · Undeterminable</span>')+
+    '</div>'+
+    (a.nmMatchYn!=="Y"?'<div class="callout warn" style="margin-top:12px"><b>Review needed.</b> '+(a.nmMatchYn==="N"?'Depositor name does not match — possible third-party deposit.':'The bank did not return the actual depositor name, so the match could not be determined.')+'</div>':'')+
+    '</div>';
+  }
+
+  h += '<div class="form-sec"><div class="form-sec-title">History</div>'+timeline(a.events)+'</div>';
+
+  const foot = (a.status==="success")
+    ? '<button class="btn" onclick="openRename(\''+a.id+'\')">Change Name</button>'+
+      '<button class="btn danger" onclick="openTerminate(\''+a.id+'\')">Terminate</button>'
+    : '<button class="btn" onclick="closeDrawer()">Close</button>';
+  openDrawer("Virtual Account Detail", a.vaccountNo? '<span class="mono">'+a.vaccountNo+'</span>' : "Not issued", h, foot, true);
+}
+
+function timeline(events){
+  if(!events || !events.length) return '<div class="muted">No events.</div>';
+  let h = '<div class="tl">';
+  events.slice().reverse().forEach((e,i)=>{
+    h += '<div class="tl-item'+(i===0?' hi':'')+'">'+
+      '<div class="tl-act">'+e.a+'</div>'+
+      '<div class="tl-meta">'+esc(e.u)+' · <span class="mono">'+e.t+'</span></div>'+
+      (e.note?'<div class="tl-note">'+e.note+'</div>':'')+
+      (e.diff?'<div style="margin-top:8px"><table class="diff"><thead><tr><th>Field</th><th>From</th><th>To</th></tr></thead><tbody>'+
+        e.diff.map(d=>'<tr><td class="mono">'+d.f+'</td><td>'+esc(d.from)+'</td><td class="to">'+esc(d.to)+'</td></tr>').join('')+
+        '</tbody></table></div>':'')+
+    '</div>';
+  });
+  return h+'</div>';
+}
+
+/* ---------- Global activity log ---------- */
+function openGlobalLog(){
+  const all = [];
+  accounts.forEach(a=>a.events.forEach(e=>all.push(Object.assign({},e,{
+    a: e.a + '  ·  ' + (a.vaccountNo||a.accountNm)
+  }))));
+  all.sort((x,y)=> x.t.localeCompare(y.t));
+  openDrawer("Activity Log","All virtual account operations · newest first",
+    '<div class="callout">Assumed scope: every A2 call made from this CMS is recorded with actor, timestamp, request type, Hecto result code and before/after values. Confirm retention and export requirements with Compliance.</div>'+
+    timeline(all), '<button class="btn" onclick="closeDrawer()">Close</button>', true);
+}
+
+/* ---------- Bulk import ---------- */
+let bulkRows = [];
+function openBulk(){
+  bulkRows = [];
+  const body =
+    '<div class="callout"><b>Bulk issuance.</b> Each row becomes one <span class="k">A2 trdType=1</span> call. Rows are sent sequentially — the file is not sent to Hecto. Termination and rename batches use the same file with a different <span class="k">trdType</span> column.</div>'+
+    devPanel()+
+    '<div class="form-sec"><div class="form-sec-title">1 · Upload file</div>'+
+      '<div class="drop" onclick="loadSampleFile()">'+
+        '<div class="big">Drop an .xlsx / .csv file here, or click to browse</div>'+
+        '<div class="muted">Columns: mchtId, trdType, accountNm, validTo · max 500 rows · '+
+        '<span style="color:var(--blue)">click to load a sample file for this demo</span></div>'+
+      '</div>'+
+      '<div class="hint" style="margin-top:8px"><span><button class="btn-link" onclick="downloadTemplate()">Download the import template</button></span></div>'+
+    '</div>'+
+    '<div id="bulkPreview"></div>';
+  const foot = '<button class="btn" onclick="closeDrawer()">Cancel</button>'+
+    '<button class="btn primary" id="btnBulk" disabled onclick="runBulk()">Request for Virtual Accounts</button>';
+  openDrawer("Bulk Import","A2 · Issuance · trdType=1", body, foot, true);
+}
+function loadSampleFile(){
+  bulkRows = [
+    {n:1,mchtId:"mid_xrex_kr01",accountNm:"XREX-B001",validTo:"20261231235959"},
+    {n:2,mchtId:"mid_xrex_kr01",accountNm:"XREX-B002",validTo:"20261231235959"},
+    {n:3,mchtId:"mid_xrex_kr01",accountNm:"XREX-B003-LONGNAME",validTo:""},
+    {n:4,mchtId:"mid_xrex_kr02",accountNm:"XREX-B004",validTo:""},
+    {n:5,mchtId:"",accountNm:"XREX-B005",validTo:"20271231235959"},
+    {n:6,mchtId:"mid_xrex_kr02",accountNm:"XREX-B006",validTo:""}
+  ];
+  bulkRows.forEach(r=>{
+    r.errors = [];
+    if(!r.mchtId) r.errors.push("mchtId is required");
+    else if(!MERCHANTS.includes(r.mchtId)) r.errors.push("Unknown mchtId");
+    if(!r.accountNm) r.errors.push("accountNm is required");
+    else if(r.accountNm.length>10) r.errors.push("accountNm exceeds 10 characters ("+r.accountNm.length+")");
+    if(r.validTo && !/^\d{14}$/.test(r.validTo)) r.errors.push("validTo must be YYYYMMDDhhmmss");
+    r.status = r.errors.length ? "invalid" : "ready";
+  });
+  renderBulkPreview();
+}
+function renderBulkPreview(){
+  const valid = bulkRows.filter(r=>r.status!=="invalid").length;
+  const invalid = bulkRows.length - valid;
+  let h = '<div class="form-sec"><div class="form-sec-title">2 · Validate <span class="api">· VA_issuance_sample.xlsx · '+bulkRows.length+' rows</span></div>';
+  h += '<div class="callout '+(invalid?"warn":"ok")+'">'+
+    '<b>'+valid+' row'+(valid===1?"":"s")+' ready.</b> '+
+    (invalid? invalid+' row'+(invalid===1?"":"s")+' will be skipped — fix them in the file and re-upload.' : 'No validation errors.')+
+    ' Validation runs client-side against the A2 field rules before anything is sent.</div>';
+  h += '<div class="tbl-wrap" style="border:1px solid var(--line);border-radius:8px"><table class="tbl"><thead><tr>'+
+    '<th style="width:40px">#</th><th>mchtId</th><th>accountNm</th><th>validTo</th><th>Check</th><th style="width:130px">Result</th></tr></thead><tbody>';
+  bulkRows.forEach(r=>{
+    h += '<tr>'+
+      '<td class="muted">'+r.n+'</td>'+
+      '<td class="mono">'+(r.mchtId||'<span class="tag failed">missing</span>')+'</td>'+
+      '<td class="mono">'+esc(r.accountNm)+'</td>'+
+      '<td class="mono">'+(r.validTo||'<span class="muted">indefinite</span>')+'</td>'+
+      '<td>'+(r.errors.length? '<span class="tag failed">'+esc(r.errors.join("; "))+'</span>' : '<span class="tag active">OK</span>')+'</td>'+
+      '<td id="brow'+r.n+'">'+(r.res? bulkResTag(r) : (r.status==="invalid"?'<span class="muted">Skipped</span>':'<span class="muted">Not sent</span>'))+'</td>'+
+    '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div style="margin-top:14px" id="bulkProgWrap"></div></div>';
+  document.getElementById("bulkPreview").innerHTML = h;
+  document.getElementById("btnBulk").disabled = valid===0;
+}
+function bulkResTag(r){
+  if(r.res==="0000") return '<span class="tag active mono">0000</span><div class="sub mono">'+r.va+'</div>';
+  return '<span class="tag failed mono">'+r.res+'</span>';
+}
+async function runBulk(){
+  const btn = document.getElementById("btnBulk");
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Processing…';
+  const targets = bulkRows.filter(r=>r.status!=="invalid");
+  const wrap = document.getElementById("bulkProgWrap");
+  wrap.innerHTML = '<div class="progress"><i id="pbar"></i></div><div class="hint"><span id="ptxt">Starting…</span></div>';
+  const saveLat = latencyMs; latencyMs = 420;
+  let done=0, ok=0, fail=0;
+  const batchId = "B-"+ts(0).dt+"-0"+(batches.length+1);
+  for(const r of targets){
+    document.getElementById("ptxt").textContent = "Sending row "+r.n+" ("+r.accountNm+")… "+done+"/"+targets.length;
+    const res = await callA2({mchtId:r.mchtId});
+    const good = res.outStatCd==="0021" && res.outRsltCd==="0000";
+    r.res = res.outRsltCd; r.va = res.vaccountNo; r.bank = res.bankCd;
+    if(good){
+      ok++;
+      accounts.unshift(mkAcct({
+        mchtId:r.mchtId, accountNm:r.accountNm, validTo:r.validTo,
+        bankCd:res.bankCd, vaccountNo:res.vaccountNo, status:"success",
+        trdNo:res.trdNo, trdDt:res.trdDt, trdTm:res.trdTm,
+        outStatCd:res.outStatCd, outRsltCd:res.outRsltCd, outRsltMsg:res.outRsltMsg,
+        requestedBy:"jerry.huang", source:batchId,
+        events:[{a:"Issuance requested (trdType=1)",u:"jerry.huang",t:ts(0).iso,note:"Batch "+batchId+" row "+r.n+" · outRsltCd=0000"}]
+      }));
+    } else fail++;
+    done++;
+    document.getElementById("brow"+r.n).innerHTML = bulkResTag(r);
+    document.getElementById("pbar").style.width = Math.round(done/targets.length*100)+"%";
+  }
+  latencyMs = saveLat;
+  document.getElementById("ptxt").innerHTML = '<span class="ok">Done — '+ok+' issued, '+fail+' failed, '+(bulkRows.length-targets.length)+' skipped.</span>';
+  batches.unshift({
+    id:batchId, file:"VA_issuance_sample.xlsx", rows:bulkRows.length, ok:ok, fail:fail+(bulkRows.length-targets.length),
+    by:"jerry.huang", at:ts(0).iso, status:"Completed",
+    detail: bulkRows.map(r=>({n:r.n,mchtId:r.mchtId,accountNm:r.accountNm,validTo:r.validTo,res:r.res||"SKIP",va:r.va||"",bank:r.bank||""}))
+  });
+  btn.innerHTML = "Done"; btn.disabled = true;
+  toast(ok+" virtual accounts issued from batch "+batchId,"ok");
+  renderNav();
+}
+function downloadTemplate(){ toast("VA_import_template.xlsx downloaded (demo)","ok"); }
+
+function openBatch(id){
+  const b = batches.find(x=>x.id===id);
+  let h = '<div class="form-sec"><div class="form-sec-title">Batch</div><div class="kv">'+
+    kvRow("Batch ID","—",b.id)+kvRow("File","—",esc(b.file))+
+    kvRow("Rows","—",b.rows)+kvRow("Succeeded","—",b.ok)+kvRow("Failed / skipped","—",b.fail)+
+    kvRow("Uploaded by","—",esc(b.by))+kvRow("Uploaded at","—",b.at)+
+  '</div></div>';
+  h += '<div class="form-sec"><div class="form-sec-title">Rows</div><div class="tbl-wrap" style="border:1px solid var(--line);border-radius:8px">'+
+    '<table class="tbl"><thead><tr><th>#</th><th>mchtId</th><th>accountNm</th><th>validTo</th><th>outRsltCd</th><th>Virtual Account</th></tr></thead><tbody>';
+  b.detail.forEach(d=>{
+    h += '<tr><td class="muted">'+d.n+'</td><td class="mono">'+esc(d.mchtId||"—")+'</td><td class="mono">'+esc(d.accountNm)+'</td>'+
+      '<td class="mono">'+(d.validTo||'<span class="muted">indefinite</span>')+'</td>'+
+      '<td>'+(d.res==="0000"?'<span class="tag active mono">0000</span>':'<span class="tag failed mono">'+d.res+'</span>')+'</td>'+
+      '<td class="mono">'+(d.va||'<span class="muted">—</span>')+'</td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+  openDrawer("Batch "+b.id, esc(b.file), h, '<button class="btn" onclick="closeDrawer()">Close</button>', true);
+}
+
+/* ---------- utils ---------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function toast(msg,kind){
+  const t = document.createElement("div");
+  t.className = "toast" + (kind?" "+kind:"");
+  t.textContent = msg;
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(()=>{ t.style.transition="opacity .3s"; t.style.opacity="0"; setTimeout(()=>t.remove(),320); }, 3600);
+}
+
+render();
+</script>
+</body>
+</html>
